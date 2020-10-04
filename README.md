@@ -1,2 +1,8 @@
 # azure-iot-rs
-Rust wrappers for Azure IOT C SDK
+Idiomatic rust bindings for azure_iot_sdk_c
+
+
+## Building 
+```sh
+cargo build
+```
