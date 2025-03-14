@@ -2,13 +2,13 @@
 use std::panic;
 use std::ffi::{CString, c_void};
 use std::{thread, time};
-use std::convert::{TryFrom};
+use std::convert::TryFrom;
 use std::str;
-use std::sync::{Once};
+use std::sync::Once;
 use std::result::Result;
 use std::boxed::Box;
 use std::ops::FnMut;
-use serde_json::{ Value};
+use serde_json::Value;
 use azure_iot_rs_sys::*;
 use crate::message::IotHubMessage;
 
@@ -32,7 +32,7 @@ unsafe impl<'c> Send for IotHubModuleClient<'c> {}
 impl<'c> IotHubModuleClient<'c> {
     unsafe extern "C" fn c_message_callback(handle: *mut IOTHUB_MESSAGE_HANDLE_DATA_TAG, ctx: *mut std::ffi::c_void) -> IOTHUBMESSAGE_DISPOSITION_RESULT {
         info!("Received message from hub!");
-        let client = &mut *(ctx as *mut IotHubModuleClient);
+        let client = unsafe { &mut *(ctx as *mut IotHubModuleClient) };
         let message = IotHubMessage::from_handle(handle);
         let result = client.message_callback(message);        
         match result {
@@ -42,15 +42,17 @@ impl<'c> IotHubModuleClient<'c> {
         
     }
 
-    unsafe extern "C" fn c_twin_callback(state: DEVICE_TWIN_UPDATE_STATE, payload: *const u8, size: u64, ctx: *mut std::ffi::c_void) {
+    unsafe extern "C" fn c_twin_callback(state: DEVICE_TWIN_UPDATE_STATE, payload: *const u8, size: usize, ctx: *mut std::ffi::c_void) {
         info!("Received twin callback from hub! {} {}", state, size);
-        let client = &mut *(ctx as *mut IotHubModuleClient);
-        let data = std::slice::from_raw_parts(payload, usize::try_from(size).unwrap());
-        client.twin_callback(data);        
+        unsafe {
+            let client = &mut *(ctx as *mut IotHubModuleClient);
+            let data = std::slice::from_raw_parts(payload, usize::try_from(size).unwrap());    
+            client.twin_callback(data);        
+        }
     }
 
     unsafe extern "C" fn c_confirmation_callback(_status: IOTHUB_CLIENT_RESULT, ctx: *mut std::ffi::c_void) {
-        let _message = &mut *(ctx as *mut Box<IotHubMessage>);
+        let _message =unsafe { &mut *(ctx as *mut Box<IotHubMessage>) };
     }
 
     fn message_callback(&mut self, message: IotHubMessage) -> Result<(), &str> {

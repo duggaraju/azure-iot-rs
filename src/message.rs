@@ -4,7 +4,6 @@ use std::ffi::{CStr};
 /// Enum to return the type of an IOT hub message.
 #[derive(Debug)]
 pub enum MessageBody<'b> {
-    Unknown,
     Text(&'b str),
     Binary(&'b [u8])
 }
@@ -40,16 +39,16 @@ impl Clone for IotHubMessage {
 }
 
 impl IotHubMessage {
-    fn get_array<'a>(&self) -> &'a [u8] {
+    fn get_array<'a>(&'a self) -> &'a [u8] {
         let buffer: *mut *const ::std::os::raw::c_uchar = std::ptr::null_mut();
-        let size: *mut size_t  = std::ptr::null_mut();
+        let size: *mut usize  = std::ptr::null_mut();
         unsafe { 
             IoTHubMessage_GetByteArray(self.handle, buffer, size); 
             std::slice::from_raw_parts(*buffer, *size as usize)
         }
     }
 
-    fn get_text(&self) -> &'static str {
+    fn get_text<'a>(&'a self) -> &'a str {
         let ptr = unsafe { IoTHubMessage_GetString(self.handle) };
         if ptr  ==  std::ptr::null() {
             return "";
@@ -64,19 +63,19 @@ impl IotHubMessage {
         unsafe { IoTHubMessage_GetContentType(self.handle) }
     }
 
-    pub fn from_handle(handle: *mut IOTHUB_MESSAGE_HANDLE_DATA_TAG) -> Self {
+    pub fn from_handle(handle: IOTHUB_MESSAGE_HANDLE) -> Self {
         return IotHubMessage {
             handle,
             own: false
         }
     }
 
-    pub fn body<'a>(&self) -> MessageBody<'a> {
+    pub fn body<'a>(&'a self) -> MessageBody<'a> {
         let content_type = self.content_type();
         return match content_type {
             IOTHUBMESSAGE_CONTENT_TYPE_TAG_IOTHUBMESSAGE_STRING => MessageBody::Text(self.get_text()),
             IOTHUBMESSAGE_CONTENT_TYPE_TAG_IOTHUBMESSAGE_BYTEARRAY => MessageBody::Binary(self.get_array()),
-            _ => MessageBody::Unknown
+            _ => panic!("Unknown content type")
         }
     }
 }
