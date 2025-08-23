@@ -41,9 +41,6 @@ fn main() {
     // into $OUT_DIR
     use cmake::Config;
 
-    let dst = config.build();
-    println!("cargo:rustc-link-search=native={}/lib", dst.display());
-    
     let mut modules = vec![
         "c-utility",
         "deps/umock-c",
@@ -111,6 +108,9 @@ fn main() {
     // Tell cargo to invalidate the built crate whenever the wrapper changes
     println!("cargo:rerun-if-changed=wrapper.h");
 
+    let dst = config.build();
+    println!("cargo:rustc-link-search=native={}/lib", dst.display());
+    
     // The bindgen::Builder is the main entry point
     // to bindgen, and lets you build up options for
     // the resulting bindings.
