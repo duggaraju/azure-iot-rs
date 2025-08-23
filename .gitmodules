@@ -3,7 +3,3 @@
 	url = https://github.com/Azure/azure-iot-sdk-c.git
 	branch = lts_03_2025
 	shallow = true
-[submodule "sys/azure-iot-sdk-c"]
-	path = sys/azure-iot-sdk-c
-	url = https://github.com/Azure/azure-iot-sdk-c.git
-	branch = lts_03_2025

@@ -13,7 +13,7 @@ sudo apt-get install -y git cmake build-essential curl libcurl4-openssl-dev libs
 Manaully clone the required modules
 ```bash
 git submodule update --init --depth 1
-cd azure-iot-sdk-c
+cd sys/azure-iot-sdk-c
 git submodule update --init --depth 1 c-utility/
 git submodule update --init --depth 1 deps/umock-c/
 git submodule update --init --depth 1 deps/parson/
@@ -33,4 +33,11 @@ export UPDATE_SUBMODULES=
 
 ```bash
 cargo build
+```
+
+## Examples
+
+Check the code in lib/exmples for how to use the SDK.
+```bash
+caro run 
 ```
