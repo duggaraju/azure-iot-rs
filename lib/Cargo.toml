@@ -4,14 +4,14 @@ description = "Rust wrappers for Azure IOT C SDK"
 version = "0.4.2"
 authors = ["Prakash <duggaraju@gmail.com>"]
 edition = "2024"
-repository = "https://github.com/duggaraju/azure-iot-rs/lib"
+repository = "https://github.com/duggaraju/azure-iot-rs/"
 license = "MIT"
 keywords = [ "azure", "iot", "edge", "device" , "SDK" ]
 categories = ["api-bindings"]
 
 [dependencies]
-azure-iot-rs-sys = { version = "^0.4.0", path = "../sys" }
-log = "0.4.27"
-serde_json = "1.0.143"
+azure-iot-rs-sys = { version = "^0.5.0", path = "../sys" }
+log = "0.4.28"
+serde_json = "1.0.145"
 
 [build-dependencies]
