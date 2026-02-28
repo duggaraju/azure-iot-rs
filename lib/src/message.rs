@@ -1,6 +1,8 @@
 use azure_iot_rs_sys::*;
 use std::ffi::CStr;
 
+use crate::IoTHubMessageContentType;
+
 /// Enum to return the type of an IOT hub message.
 #[derive(Debug)]
 pub enum MessageBody<'b> {
@@ -28,15 +30,20 @@ impl Drop for IotHubMessage {
 impl Clone for IotHubMessage {
     fn clone(&self) -> Self {
         let handle = unsafe { IoTHubMessage_Clone(self.handle) };
-        if handle == std::ptr::null_mut() {
+        if handle.is_null() {
             panic!("Failed to allocate message");
         }
-        return IotHubMessage { handle, own: true };
+        IotHubMessage { handle, own: true }
     }
 }
 
 impl IotHubMessage {
-    fn get_array<'a>(&'a self) -> &'a [u8] {
+
+    pub fn from(handle: IOTHUB_MESSAGE_HANDLE) -> Self {
+        IotHubMessage { handle, own: true }
+    }
+
+    fn to_bytes(&self) -> &[u8] {
         let buffer: *mut *const ::std::os::raw::c_uchar = std::ptr::null_mut();
         let size: *mut usize = std::ptr::null_mut();
         unsafe {
@@ -45,35 +52,32 @@ impl IotHubMessage {
         }
     }
 
-    fn get_text<'a>(&'a self) -> &'a str {
+    fn to_str(&self) -> &str {
         let ptr = unsafe { IoTHubMessage_GetString(self.handle) };
-        if ptr == std::ptr::null() {
+        if ptr.is_null() {
             return "";
         }
-        match unsafe { CStr::from_ptr(ptr).to_str() } {
-            Ok(string) => string,
-            _ => "",
-        }
+        unsafe { CStr::from_ptr(ptr).to_str().unwrap_or_default() }
     }
 
-    pub fn content_type(&self) -> IOTHUBMESSAGE_CONTENT_TYPE {
-        unsafe { IoTHubMessage_GetContentType(self.handle) }
+    pub fn content_type(&self) -> IoTHubMessageContentType {
+        unsafe { IoTHubMessage_GetContentType(self.handle).into() }
     }
 
     pub fn from_handle(handle: IOTHUB_MESSAGE_HANDLE) -> Self {
-        return IotHubMessage { handle, own: false };
+        IotHubMessage { handle, own: false }
     }
 
     pub fn body<'a>(&'a self) -> MessageBody<'a> {
         let content_type = self.content_type();
-        return match content_type {
-            IOTHUBMESSAGE_CONTENT_TYPE_TAG_IOTHUBMESSAGE_STRING => {
-                MessageBody::Text(self.get_text())
+        match content_type {
+            IoTHubMessageContentType::String => {
+                MessageBody::Text(self.to_str())
             }
-            IOTHUBMESSAGE_CONTENT_TYPE_TAG_IOTHUBMESSAGE_BYTEARRAY => {
-                MessageBody::Binary(self.get_array())
+            IoTHubMessageContentType::Bytearray => {
+                MessageBody::Binary(self.to_bytes())
             }
             _ => panic!("Unknown content type"),
-        };
+        }
     }
 }

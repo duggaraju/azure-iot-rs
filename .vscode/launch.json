@@ -1,0 +1,65 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'azure_iot_rs_sys'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=azure-iot-rs-sys"
+                ],
+                "filter": {
+                    "name": "azure_iot_rs_sys",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'azure_iot_rs'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=azure-iot-rs"
+                ],
+                "filter": {
+                    "name": "azure_iot_rs",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug example 'basic'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--example=basic",
+                    "--package=azure-iot-rs"
+                ],
+                "filter": {
+                    "name": "basic",
+                    "kind": "example"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}

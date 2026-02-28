@@ -5,26 +5,33 @@
 
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 
+pub mod enums {
+    use super::*;
+    include!(concat!(env!("OUT_DIR"), "/enum_wrappers.rs"));
+}
+
+pub mod structs {
+    use super::*;
+    include!(concat!(env!("OUT_DIR"), "/struct_wrappers.rs"));
+}
+
 #[cfg(test)]
 mod tests {
-    use std::ffi::CString;
     use super::*;
-
 
     #[test]
     fn test_mqtt() {
-        unsafe { 
+        unsafe {
             IoTHub_Init();
 
             let handle = IoTHubModuleClient_LL_CreateFromEnvironment(Some(MQTT_Protocol));
             IoTHubModuleClient_LL_Destroy(handle);
-            
         }
     }
 
     #[test]
     fn test_amqp() {
-        unsafe { 
+        unsafe {
             IoTHub_Init();
 
             //let string = CString::new("").unwrap();
@@ -34,5 +41,4 @@ mod tests {
             //IoTHubModuleClient_LL_Destroy(handle);
         }
     }
-
 }
