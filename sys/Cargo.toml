@@ -2,8 +2,8 @@
 name = "azure-iot-rs-sys"
 description = "Rust bindings for Azure IOT C SDK"
 version.workspace = true
-authors = ["Prakash <duggaraju@gmail.com>"]
-edition = "2024"
+authors.workspace = true
+edition.workspace = true
 build = "build.rs"
 repository = "https://github.com/duggaraju/azure-iothub-rs"
 license = "MIT"
@@ -21,6 +21,6 @@ prov_client = ["http"]
 [dependencies]
 
 [build-dependencies]
-bindgen="0.72.0"
-cmake = "0.1.54"
-pkg-config = "0.3.32"
+bindgen="0.72.1"
+cmake = "0.1.58"
+pkg-config = "0.3.33"

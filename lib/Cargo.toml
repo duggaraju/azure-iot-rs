@@ -2,8 +2,8 @@
 name = "azure-iot-rs"
 description = "Rust wrappers for Azure IOT C SDK"
 version.workspace = true
-authors = ["Prakash <duggaraju@gmail.com>"]
-edition = "2024"
+authors.workspace = true
+edition.workspace = true
 repository = "https://github.com/duggaraju/azure-iot-rs/"
 license = "MIT"
 keywords = [ "azure", "iot", "edge", "device" , "SDK" ]
