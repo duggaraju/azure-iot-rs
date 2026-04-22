@@ -6,16 +6,13 @@ use crate::transport::Transport;
 use crate::{
     ConnectionStatus, ConnectionStatusReason, IoTHubClientConfirmationResult,
     IoTHubClientRetryPolicy, IoTHubClientStatus, IoTHubDeviceTwinUpdateState,
-    IoTHubMessageDispositionResult,
+    IoTHubMessageDispositionResult, IotHub,
 };
 use azure_iot_rs_sys::*;
 use futures::channel::oneshot;
 use std::ffi::{CStr, c_char, c_void};
 use std::ptr::{self, NonNull};
-use std::sync::Once;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
-
-static IOTHUB: Once = Once::new();
 
 pub struct MethodHandle(METHOD_HANDLE);
 
@@ -80,7 +77,9 @@ where
         ctx: *mut c_void,
     ) {
         let client = unsafe { &mut *(ctx as *mut Self) };
-        client.callback.on_connection_status_changed(status.into(), reason.into());
+        client
+            .callback
+            .on_connection_status_changed(status.into(), reason.into());
     }
 
     unsafe extern "C" fn c_device_twin_callback(
@@ -91,9 +90,7 @@ where
     ) {
         let client = unsafe { &mut *(ctx as *mut Self) };
         let data = unsafe { std::slice::from_raw_parts(payload, payload_length) };
-        client
-            .callback
-            .on_device_twin(update_state.into(), data);
+        client.callback.on_device_twin(update_state.into(), data);
     }
 
     unsafe extern "C" fn c_device_method_callback(
@@ -106,10 +103,10 @@ where
     ) -> ::std::os::raw::c_int {
         let client = unsafe { &mut *(ctx as *mut Self) };
         let payload = unsafe { std::slice::from_raw_parts(payload, payload_length) };
-        let method_name = unsafe { CStr::from_ptr(method_name) }.to_str().unwrap_or_default();
-        let result = client
-            .callback
-            .on_device_method(method_name, payload);
+        let method_name = unsafe { CStr::from_ptr(method_name) }
+            .to_str()
+            .unwrap_or_default();
+        let result = client.callback.on_device_method(method_name, payload);
         match result {
             Ok(resp_data) => {
                 unsafe {
@@ -183,12 +180,6 @@ impl<C> IoTHubDeviceClient<C>
 where
     C: DeviceClientCallback,
 {
-    fn ensure_initialized() {
-        IOTHUB.call_once(|| unsafe {
-            IoTHub_Init();
-        });
-    }
-
     unsafe extern "C" fn c_async_confirmation_result_callback(
         result: IOTHUB_CLIENT_CONFIRMATION_RESULT,
         ctx: *mut c_void,
@@ -216,7 +207,7 @@ where
         protocol: IOTHUB_CLIENT_TRANSPORT_PROVIDER,
         callback: C,
     ) -> Result<Self, IotError> {
-        Self::ensure_initialized();
+        IotHub::ensure_initialized()?;
         let handle = unsafe {
             IoTHubClientCore_CreateFromConnectionString(connection_string.as_ptr(), protocol)
         };
@@ -228,7 +219,6 @@ where
     }
 
     pub fn create(config: &IOTHUB_CLIENT_CONFIG, callback: C) -> Result<Self, IotError> {
-        Self::ensure_initialized();
         let handle = unsafe { IoTHubClientCore_Create(config as *const IOTHUB_CLIENT_CONFIG) };
         if handle.is_null() {
             Err(IotError::NullPtr)
@@ -242,7 +232,6 @@ where
         config: &IOTHUB_CLIENT_CONFIG,
         callback: C,
     ) -> Result<Self, IotError> {
-        Self::ensure_initialized();
         let handle = unsafe {
             IoTHubClientCore_CreateWithTransport(
                 transport_handle.as_raw(),
@@ -271,7 +260,7 @@ where
         protocol: IOTHUB_CLIENT_TRANSPORT_PROVIDER,
         callback: C,
     ) -> Result<Self, IotError> {
-        Self::ensure_initialized();
+        IotHub::ensure_initialized()?;
         let handle = unsafe {
             IoTHubClientCore_CreateFromDeviceAuth(iothub_uri.as_ptr(), device_id.as_ptr(), protocol)
         };
@@ -286,7 +275,7 @@ where
         protocol: IOTHUB_CLIENT_TRANSPORT_PROVIDER,
         callback: C,
     ) -> Result<Self, IotError> {
-        Self::ensure_initialized();
+        IotHub::ensure_initialized()?;
         let handle = unsafe { IoTHubClientCore_CreateFromEnvironment(protocol) };
         if handle.is_null() {
             Err(IotError::Sdk(IOTHUB_CLIENT_RESULT_TAG_IOTHUB_CLIENT_ERROR))
@@ -460,11 +449,7 @@ where
         command_callback: IOTHUB_CLIENT_COMMAND_CALLBACK_ASYNC,
     ) -> Result<(), IotError> {
         let result = unsafe {
-            IoTHubClientCore_SubscribeToCommands(
-                self.handle,
-                command_callback,
-                self.context_ptr(),
-            )
+            IoTHubClientCore_SubscribeToCommands(self.handle, command_callback, self.context_ptr())
         };
         IotError::check_sdk_result(result)?;
         Ok(())
@@ -615,7 +600,10 @@ where
     }
 }
 
-impl<C> Drop for IoTHubDeviceClient<C> where C : DeviceClientCallback {
+impl<C> Drop for IoTHubDeviceClient<C>
+where
+    C: DeviceClientCallback,
+{
     fn drop(&mut self) {
         self.destroy();
     }

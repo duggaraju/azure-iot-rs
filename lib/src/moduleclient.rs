@@ -3,7 +3,8 @@ use crate::message::IotHubMessage;
 use crate::transport::TransportProvider;
 use crate::{
     ConnectionStatus, ConnectionStatusReason, IoTHubClientConfirmationResult,
-    IoTHubClientPropertyPayloadType, IoTHubMessageDispositionResult, IotHubDeviceTwinUpdateState,
+    IoTHubClientPropertyPayloadType, IoTHubMessageDispositionResult, IotHub,
+    IotHubDeviceTwinUpdateState,
 };
 use azure_iot_rs_sys::*;
 use futures::channel::oneshot;
@@ -15,12 +16,9 @@ use std::os::raw::c_int;
 use std::ptr;
 use std::result::Result;
 use std::str;
-use std::sync::Once;
 use std::task::Poll;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use std::{thread, time};
-
-static IOTHUB: Once = Once::new();
 
 unsafe extern "C" {
     fn free(ptr: *mut c_void);
@@ -288,12 +286,6 @@ impl<C: ModuleEventCallback> IotHubModuleClient<C> {
 }
 
 impl<C: ModuleEventCallback> IotHubModuleClient<C> {
-    fn ensure_initialized() {
-        IOTHUB.call_once(|| unsafe {
-            IoTHub_Init();
-        });
-    }
-
     fn context_ptr(&mut self) -> *mut c_void {
         self as *mut IotHubModuleClient<C> as *mut c_void
     }
@@ -302,7 +294,7 @@ impl<C: ModuleEventCallback> IotHubModuleClient<C> {
         protocol: TransportProvider,
         callback: C,
     ) -> Result<Self, IotError> {
-        Self::ensure_initialized();
+        IotHub::ensure_initialized()?;
         let handle = unsafe { IoTHubModuleClient_LL_CreateFromEnvironment(protocol.to_sdk()) };
         if handle.is_null() {
             return Err(IotError::Sdk(IOTHUB_CLIENT_RESULT_TAG_IOTHUB_CLIENT_ERROR));
@@ -319,7 +311,7 @@ impl<C: ModuleEventCallback> IotHubModuleClient<C> {
         transport: TransportProvider,
         callback: C,
     ) -> Result<Self, IotError> {
-        Self::ensure_initialized();
+        IotHub::ensure_initialized()?;
         let connection = CString::new(connection_string)?;
         let handle = unsafe {
             IoTHubModuleClient_LL_CreateFromConnectionString(
@@ -383,7 +375,7 @@ impl<C: ModuleEventCallback> IotHubModuleClient<C> {
         message: &IotHubMessage,
     ) -> Result<IoTHubClientConfirmationResult, IotError> {
         let output = c"output";
-        self.send_event_to_output_async(&message, output).await
+        self.send_event_to_output_async(message, output).await
     }
 
     pub async fn send_message(

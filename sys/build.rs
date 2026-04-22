@@ -85,15 +85,14 @@ fn generate_enum_wrappers(bindings_rs: &str) -> String {
 
     for line in bindings_rs.lines() {
         let trimmed = line.trim();
-        if trimmed.starts_with("pub type ") {
-            if let Some((left, right)) = trimmed
+        if trimmed.starts_with("pub type ")
+            && let Some((left, right)) = trimmed
                 .strip_prefix("pub type ")
                 .and_then(|rest| rest.split_once('='))
-            {
-                let alias = left.trim().to_string();
-                let raw = right.trim().trim_end_matches(';').trim().to_string();
-                type_aliases.push((alias, raw));
-            }
+        {
+            let alias = left.trim().to_string();
+            let raw = right.trim().trim_end_matches(';').trim().to_string();
+            type_aliases.push((alias, raw));
         }
 
         if trimmed.starts_with("pub use self::") && trimmed.contains(" as ") {
@@ -107,10 +106,11 @@ fn generate_enum_wrappers(bindings_rs: &str) -> String {
             }
         }
 
-        if trimmed.starts_with("pub fn ") && trimmed.contains("Strings(") {
-            if let Some(name) = extract_symbol_after(trimmed, "pub fn ") {
-                strings_fns.push(name.to_string());
-            }
+        if trimmed.starts_with("pub fn ")
+            && trimmed.contains("Strings(")
+            && let Some(name) = extract_symbol_after(trimmed, "pub fn ")
+        {
+            strings_fns.push(name.to_string());
         }
     }
 
@@ -261,21 +261,20 @@ fn generate_struct_wrappers(bindings_rs: &str) -> String {
     for line in bindings_rs.lines() {
         let trimmed = line.trim();
 
-        if trimmed.starts_with("pub struct ") {
-            if let Some(name) = extract_symbol_after(trimmed, "pub struct ") {
-                struct_names.insert(name.to_string());
-            }
+        if trimmed.starts_with("pub struct ")
+            && let Some(name) = extract_symbol_after(trimmed, "pub struct ")
+        {
+            struct_names.insert(name.to_string());
         }
 
-        if trimmed.starts_with("pub type ") {
-            if let Some((left, right)) = trimmed
+        if trimmed.starts_with("pub type ")
+            && let Some((left, right)) = trimmed
                 .strip_prefix("pub type ")
                 .and_then(|rest| rest.split_once('='))
-            {
-                let alias = left.trim().to_string();
-                let raw = right.trim().trim_end_matches(';').trim().to_string();
-                type_aliases.push((alias, raw));
-            }
+        {
+            let alias = left.trim().to_string();
+            let raw = right.trim().trim_end_matches(';').trim().to_string();
+            type_aliases.push((alias, raw));
         }
 
         if trimmed.starts_with("pub use self::") && trimmed.contains(" as ") {

@@ -1,6 +1,7 @@
 mod config;
 mod deviceclient;
 mod error;
+mod hub;
 mod message;
 mod moduleclient;
 mod storage;
@@ -30,6 +31,7 @@ pub type IoTHubClientFileUploadGetDataResult = IothubClientFileUploadGetDataResu
 pub use config::ConfigBuilder;
 pub use deviceclient::IoTHubDeviceClient;
 pub use error::IotError;
+pub use hub::IotHub;
 pub use message::{IotHubMessage, MessageBody};
 pub use moduleclient::{IotHubModuleClient, ModuleClientOption, ModuleEventCallback};
 pub use structs::{IoTHubClientCommandRequest, IoTHubClientCommandResponse};

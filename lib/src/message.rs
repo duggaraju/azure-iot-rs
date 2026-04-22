@@ -38,7 +38,6 @@ impl Clone for IotHubMessage {
 }
 
 impl IotHubMessage {
-
     pub fn from(handle: IOTHUB_MESSAGE_HANDLE) -> Self {
         IotHubMessage { handle, own: true }
     }
@@ -71,12 +70,8 @@ impl IotHubMessage {
     pub fn body<'a>(&'a self) -> MessageBody<'a> {
         let content_type = self.content_type();
         match content_type {
-            IoTHubMessageContentType::String => {
-                MessageBody::Text(self.to_str())
-            }
-            IoTHubMessageContentType::Bytearray => {
-                MessageBody::Binary(self.to_bytes())
-            }
+            IoTHubMessageContentType::String => MessageBody::Text(self.to_str()),
+            IoTHubMessageContentType::Bytearray => MessageBody::Binary(self.to_bytes()),
             _ => panic!("Unknown content type"),
         }
     }
